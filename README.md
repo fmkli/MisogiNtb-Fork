@@ -87,15 +87,3 @@ For suggestions, issues, or collaboration, feel free to open a GitHub Issue.
 Thanks to the open-source community and Android NFC developers for documentation and sample code.
 
 ```
-
----
-
-如果你需要，我也可以帮你生成：
-
-- `.gitignore`（推荐模板）
-- `LICENSE`（MIT、Apache-2.0 等任选）
-- `nfc_tech_filter.xml` 示例
-- 最小发布包 `.zip`
-
-你只需要告诉我即可。
-```
