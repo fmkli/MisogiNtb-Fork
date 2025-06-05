@@ -26,12 +26,6 @@ NFC Timing System with Session Management
 
 ---
 
-## 📸 使用界面截图 | Screenshots
-
-> 可以在此处放上应用运行时的截图（如：待机界面、刷卡界面、计费界面）
-
----
-
 ## 🛠️ 构建方法 | How to Build
 
 ### 环境要求 | Requirements
