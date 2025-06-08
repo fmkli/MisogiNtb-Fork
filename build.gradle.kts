@@ -3,14 +3,7 @@ plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.compose) apply false
+    id("com.google.devtools.ksp") version "2.0.21-1.0.25" apply false // 示例版本，请替换为最新兼容版
+
 }
-// 根目录 build.gradle.kts
-buildscript {
-    repositories {
-        google()
-        jcenter() // 或 mavenCentral()
-    }
-    dependencies {
-        classpath("com.android.tools.build:gradle:7.0.4")
-    }
-}
+

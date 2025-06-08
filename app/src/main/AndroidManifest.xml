@@ -16,6 +16,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Misogintb"
         tools:targetApi="31">
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -24,28 +25,24 @@
             android:theme="@style/Theme.Misogintb"
             android:launchMode="singleTop"
             android:windowSoftInputMode="stateHidden"
-            android:noHistory="true">
+            >
 
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
 
-            <intent-filter>
-                <action android:name="android.nfc.action.TECH_DISCOVERED"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-            </intent-filter>
+        <!-- NFC Intent Filter for TECH_DISCOVERED -->
+        <intent-filter>
+            <action android:name="android.nfc.action.TECH_DISCOVERED"/>
+            <category android:name="android.intent.category.DEFAULT"/> <!-- 强烈建议为 TECH_DISCOVERED 添加此 category -->
+        </intent-filter>
+        <meta-data
+            android:name="android.nfc.action.TECH_DISCOVERED"
+            android:resource="@xml/nfc_tech_filter" /> <!-- 确保 @xml/nfc_tech_filter 文件存在且正确 -->
 
-            <intent-filter>
-                <action android:name="android.nfc.action.TAG_DISCOVERED" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
+    </activity>
 
-            <meta-data
-                android:name="android.nfc.action.TECH_DISCOVERED"
-                android:resource="@xml/nfc_tech_filter"/>
-        </activity>
+</application>
 
-    </application>
-
-</manifest>
+    </manifest>
