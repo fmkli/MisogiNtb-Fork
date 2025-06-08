@@ -1,3 +1,15 @@
+# 注意！
+本分支对原项目进行了修改（uwu），实现了储值功能（进场刷卡记录，出场扣费记录），可以设置单次扣费和卡内余额，数据存在本地
+## 纯是我跟 Gemini 大战到凌晨 5:30 差点讨论出 HyperOS 2.2 恶性BUG的东西
+## 进行改动的部分 100% 纯 AI 编写
+## 超级巨无霸史山
+
+# 该分支已知问题：
+1.一个卡片读卡扣费（第二次读卡扣费）后再刷还会扣费
+2.我还没找到，纯跟 Gemini 吵来玩粘贴出来的
+
+# 原项目README：
+
 ⚠️⚠️⚠️ 注意：本项目（包括本文）使用了海量 AI 内容，欢迎您进行 fork 或修改继续改进，谢谢！
 
 ⚠️⚠️⚠️ Note: This project (including this README) makes extensive use of AI-generated content. You're welcome to fork it or build upon it. Thanks for your interest!
