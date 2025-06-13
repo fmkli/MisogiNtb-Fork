@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.misogintb.app-mergeDebugResources-49:/values-nl/values-nl.xml",
+            "outputFile": "com.example.misogintb.app-mergeDebugResources-53:/values-nl/values-nl.xml",
             "map": [
                 {
                     "source": "C:\\Users\\Fmkli\\.gradle\\caches\\8.11.1\\transforms\\a89604786079866e626d8c8e334d08d1\\transformed\\ui-release\\res\\values-nl\\values-nl.xml",

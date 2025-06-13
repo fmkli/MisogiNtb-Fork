@@ -76,6 +76,6 @@ dependencies {
     ksp("androidx.room:room-compiler:$roomVersion") // 使用 ksp 替代 kapt
 
     implementation("androidx.room:room-ktx:$roomVersion")
-
+    implementation ("androidx.datastore:datastore-preferences:1.1.7") // 或者更新的版本
 }
 

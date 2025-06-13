@@ -45,6 +45,10 @@ MERGED from [androidx.room:room-runtime:2.6.1] C:\Users\Fmkli\.gradle\caches\8.1
 MERGED from [androidx.room:room-ktx:2.6.1] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\01f9954678d4e37143f60b01a27c1685\transformed\room-ktx-2.6.1\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.sqlite:sqlite-framework:2.4.0] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\237b7d6bd972753ea36e3deafb7c1fa4\transformed\sqlite-framework-2.4.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.sqlite:sqlite:2.4.0] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\75dd88e33fc9f66dcc7fb09354a8baf2\transformed\sqlite-2.4.0\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.datastore:datastore-core-android:1.1.7] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\7c058127eb700fa9fc409ab9ff6b9775\transformed\datastore-core-release\AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.datastore:datastore-preferences-core-android:1.1.7] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\5c61f51c13cef58a08a21cbc2ed961d7\transformed\datastore-preferences-core-release\AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.datastore:datastore-android:1.1.7] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\cf9e5442cae7c12553c9659a75a9c82b\transformed\datastore-release\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.datastore:datastore-preferences-android:1.1.7] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\8c2111932f0f034a64a005979fc76523\transformed\datastore-preferences-release\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.compose.runtime:runtime-saveable-android:1.7.1] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\7bfabe9ba4b63b8c203e17016a7d23fa\transformed\runtime-saveable-release\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.compose.runtime:runtime-android:1.7.1] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\39faf730d8a99794b18410d6f8d3f676\transformed\runtime-release\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.annotation:annotation-experimental:1.4.1] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\d140d15a089d226a20fca558399889ac\transformed\annotation-experimental-1.4.1\AndroidManifest.xml:2:1-7:12
@@ -250,6 +254,14 @@ MERGED from [androidx.sqlite:sqlite-framework:2.4.0] C:\Users\Fmkli\.gradle\cach
 MERGED from [androidx.sqlite:sqlite-framework:2.4.0] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\237b7d6bd972753ea36e3deafb7c1fa4\transformed\sqlite-framework-2.4.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.sqlite:sqlite:2.4.0] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\75dd88e33fc9f66dcc7fb09354a8baf2\transformed\sqlite-2.4.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.sqlite:sqlite:2.4.0] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\75dd88e33fc9f66dcc7fb09354a8baf2\transformed\sqlite-2.4.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.datastore:datastore-core-android:1.1.7] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\7c058127eb700fa9fc409ab9ff6b9775\transformed\datastore-core-release\AndroidManifest.xml:5:5-44
+MERGED from [androidx.datastore:datastore-core-android:1.1.7] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\7c058127eb700fa9fc409ab9ff6b9775\transformed\datastore-core-release\AndroidManifest.xml:5:5-44
+MERGED from [androidx.datastore:datastore-preferences-core-android:1.1.7] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\5c61f51c13cef58a08a21cbc2ed961d7\transformed\datastore-preferences-core-release\AndroidManifest.xml:5:5-44
+MERGED from [androidx.datastore:datastore-preferences-core-android:1.1.7] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\5c61f51c13cef58a08a21cbc2ed961d7\transformed\datastore-preferences-core-release\AndroidManifest.xml:5:5-44
+MERGED from [androidx.datastore:datastore-android:1.1.7] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\cf9e5442cae7c12553c9659a75a9c82b\transformed\datastore-release\AndroidManifest.xml:20:5-44
+MERGED from [androidx.datastore:datastore-android:1.1.7] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\cf9e5442cae7c12553c9659a75a9c82b\transformed\datastore-release\AndroidManifest.xml:20:5-44
+MERGED from [androidx.datastore:datastore-preferences-android:1.1.7] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\8c2111932f0f034a64a005979fc76523\transformed\datastore-preferences-release\AndroidManifest.xml:20:5-44
+MERGED from [androidx.datastore:datastore-preferences-android:1.1.7] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\8c2111932f0f034a64a005979fc76523\transformed\datastore-preferences-release\AndroidManifest.xml:20:5-44
 MERGED from [androidx.compose.runtime:runtime-saveable-android:1.7.1] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\7bfabe9ba4b63b8c203e17016a7d23fa\transformed\runtime-saveable-release\AndroidManifest.xml:5:5-44
 MERGED from [androidx.compose.runtime:runtime-saveable-android:1.7.1] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\7bfabe9ba4b63b8c203e17016a7d23fa\transformed\runtime-saveable-release\AndroidManifest.xml:5:5-44
 MERGED from [androidx.compose.runtime:runtime-android:1.7.1] C:\Users\Fmkli\.gradle\caches\8.11.1\transforms\39faf730d8a99794b18410d6f8d3f676\transformed\runtime-release\AndroidManifest.xml:5:5-44

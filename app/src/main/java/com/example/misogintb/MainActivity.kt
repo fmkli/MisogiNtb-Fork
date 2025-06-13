@@ -166,6 +166,22 @@ class MainActivity : ComponentActivity() {
     private var clearMessageJob: Job? = null
     private val MESSAGE_DISPLAY_DURATION = 3000L
 
+    // ... (你已有的其他成员变量如 vibrator, nfcAdapter, db, DAOs, UI States etc.) ...
+
+    private var lastProcessedCardId: String? = null
+    private var lastProcessedTimeMillis: Long = 0
+    private val NFC_PROCESSING_DEBOUNCE_INTERVAL = 2000L // 2秒的去抖动间隔，可以调整
+
+    private fun bytesToHexString(bytes: ByteArray?): String? {
+        if (bytes == null) return null
+        val hexChars = CharArray(bytes.size * 2)
+        for (j in bytes.indices) {
+            val v = bytes[j].toInt() and 0xFF
+            hexChars[j * 2] = "0123456789ABCDEF"[v ushr 4] // ushr is unsigned shift right
+            hexChars[j * 2 + 1] = "0123456789ABCDEF"[v and 0x0F]
+        }
+        return String(hexChars)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -313,50 +329,100 @@ class MainActivity : ComponentActivity() {
         clearMessageJob?.cancel()
     }
 
-
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        Log.i("NFC_LIFECYCLE", "********** onNewIntent CALLED! Action: ${intent.action} **********")
-        setIntent(intent) // 更新 Activity 的当前 Intent
+        Log.d("NFC_INTENT_RAW", "onNewIntent received action: ${intent.action}") // 新增日志，查看原始接收到的action
 
-        if (!_isNfcReady.value) {
-            Log.w("NFC_LIFECYCLE", "onNewIntent: NFC not ready, ignoring intent.")
-            updateOperationStatus("NFC未就绪", clearAfterDelay = true)
-            return
-        }
+        // 检查是否是NFC相关的Intent Action
+        if (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action ||
+            NfcAdapter.ACTION_TAG_DISCOVERED == intent.action ||
+            NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action) {
 
-        if (!isNfcIntent(intent)) {
-            Log.w("NFC_LIFECYCLE", "onNewIntent: Received non-NFC or invalid NFC intent. Action: ${intent.action}")
-            updateOperationStatus("非NFC或无效的NFC意图", clearAfterDelay = true)
-            return
-        }
+            Log.d("NFC_INTENT_HANDLING", "Processing NFC Intent: ${intent.action}")
 
-        // --- 修改点：直接从 intent 获取 Tag，借鉴于第二段代码 ---
-        // ParcelableExtra 已在 Android 13 (TIRAMISU) 中被类型化
-        val newTagFromIntent: Tag? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getParcelableExtra(NfcAdapter.EXTRA_TAG, Tag::class.java)
+            val tag: Tag? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent.getParcelableExtra(NfcAdapter.EXTRA_TAG, Tag::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
+            }
+
+            if (tag != null) {
+                val cardId = bytesToHexString(tag.id)
+                if (cardId == null) {
+                    Log.e("NFC_DEBOUNCE", "Failed to get card ID from tag.")
+                    // 可以考虑给用户一个通用错误提示
+                    // updateOperationStatus("无法读取卡片ID", clearAfterDelay = true)
+                    return
+                }
+
+                val currentTime = System.currentTimeMillis()
+
+                // --- 去抖动逻辑开始 ---
+                synchronized(this) { // 使用 synchronized 块确保线程安全
+                    if (cardId == lastProcessedCardId &&
+                        (currentTime - lastProcessedTimeMillis) < NFC_PROCESSING_DEBOUNCE_INTERVAL) {
+                        Log.w("NFC_DEBOUNCE", "Duplicate NFC scan for card $cardId within ${NFC_PROCESSING_DEBOUNCE_INTERVAL}ms. CurrentTime: $currentTime, LastProcessed: $lastProcessedTimeMillis. IGNORED.")
+                        return // 忽略这个重复的事件
+                    }
+                    // 如果不是重复事件，更新时间和ID，然后继续处理
+                    lastProcessedCardId = cardId
+                    lastProcessedTimeMillis = currentTime
+                    Log.i("NFC_DEBOUNCE", "Processing NEW NFC scan for card $cardId at $currentTime. Debounce passed.")
+                }
+                // --- 去抖动逻辑结束 ---
+
+                // 如果通过了去抖动检查，才调用 handleTag
+                handleTag(tag) // 确保你的 handleTag 方法仍然存在并被正确调用
+
+            } else {
+                Log.w("NFC_INTENT_HANDLING", "Tag object is NULL in onNewIntent for action: ${intent.action}")
+            }
         } else {
-            @Suppress("DEPRECATION")
-            intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
+            Log.d("NFC_INTENT_RAW", "Intent action is not NFC related: ${intent.action}")
         }
-
-        if (newTagFromIntent == null) {
-            Log.w("NFC_HANDLE", "onNewIntent: Tag from intent is NULL.")
-            updateOperationStatus("错误: 未能获取标签信息")
-            // 你可能想在这里也清除 _currentCardId 和 _currentBalance
-            // _currentCardId.value = null
-            // _currentBalance.value = null
-            return
-        }
-        Log.d("NFC_HANDLE", "onNewIntent: Tag detected: ${newTagFromIntent.id?.toHexString() ?: "ID_UNKNOWN"}")
-
-        // 将获取到的 Tag 传递给 handleIntent 进行后续处理
-        // 注意：handleIntent 期望的是一个 Intent，所以我们仍然调用它，
-        // 并且 handleIntent 内部会再次提取 Tag。
-        // 或者，你可以重构 handleIntent(tag: Tag)
-        handleIntent(intent) // 保持你原有的 handleIntent(intent) 调用方式
     }
 
+    private fun handleTag(tag: Tag) {
+        // 播放声音和震动 (如果需要)
+        playBeepSound()
+        vibrate(100)
+
+        val cardId = bytesToHexString(tag.id) // 你可能已经有这个了
+        if (cardId == null) {
+            Log.e("NFC_HANDLE_TAG", "Card ID is null in handleTag. Cannot proceed.")
+            updateOperationStatus("无法读取卡片ID", clearAfterDelay = true)
+            return
+        }
+
+        Log.d("NFC_HANDLE_TAG", "Tag handled, Card ID: $cardId. Launching scan processing.")
+
+        // 确保你的 isAdminModeActive 逻辑在这里，或者在 handleUserTagScan/handleAdminTagScan 内部
+        if (_isAdminModeActive.value) {
+            Log.d("NFC_HANDLE_TAG", "Admin mode active. Calling admin scan handler.")
+            lifecycleScope.launch {
+                handleAdminTagScan(cardId) // 假设你有这个函数
+            }
+        } else {
+            Log.d("NFC_HANDLE_TAG", "User mode active. Calling user scan handler.")
+            lifecycleScope.launch {
+                val cardInfo = withContext(Dispatchers.IO) { cardInfoDao.getCard(cardId) }
+                handleUserTagScan(cardId, cardInfo)
+            }
+        }
+    }
+
+    // 假设你有 handleAdminTagScan，如果没有或者逻辑不同，请相应调整
+    private suspend fun handleAdminTagScan(cardId: String) {
+        Log.i("NFC_ADMIN_SCAN", "Admin scan for card: $cardId")
+        withContext(Dispatchers.Main) {
+            _currentCardId.value = cardId // 更新UI以显示当前扫描的卡号
+            // 根据你的管理员逻辑更新操作状态或执行其他操作
+            // 例如，可以直接调用 adminReadBalance() 或提示管理员可以进行的操作
+            updateOperationStatus("管理员模式: 已扫描卡 $cardId. 请选择操作.", clearAfterDelay = false)
+            adminReadBalance() // 例如，自动读取余额
+        }
+    }
 
     // isNfcIntent 保持不变，但可以考虑添加 NDEF_DISCOVERED
     private fun isNfcIntent(intent: Intent?): Boolean {
@@ -494,68 +560,127 @@ class MainActivity : ComponentActivity() {
     }
 
     private suspend fun handleUserTagScan(cardId: String, cardInfo: CardInfo?) {
+        Log.i("NFC_DEBUG_SCAN", "---------- New Scan Event Start ----------")
+        Log.i("NFC_DEBUG_SCAN", "Handling user scan for Card ID: $cardId")
+
         if (cardInfo == null) {
+            Log.w("NFC_DEBUG_SCAN", "CardInfo is NULL. Processing as UNKNOWN CARD.")
             withContext(Dispatchers.Main) {
-                updateOperationStatus("错误: 未注册的卡 ($cardId)")
+                _currentCardId.value = cardId // Show scanned ID even if unknown
                 _currentBalance.value = null
-                _isInsideArea.value = false
-                _entryCardId.value = null
+                updateOperationStatus("错误: 未知卡 ($cardId)。请先注册。", clearAfterDelay = true)
             }
+            Log.i("NFC_DEBUG_SCAN", "---------- Scan Event End (Unknown Card) ----------")
             return
         }
 
+        // Update UI with current card's balance immediately
         withContext(Dispatchers.Main) {
             _currentBalance.value = cardInfo.balanceInFen
+            Log.d("NFC_DEBUG_SCAN", "UI: Displaying initial balance for $cardId: ${cardInfo.balanceInFen} fen")
         }
 
+        Log.d("NFC_DEBUG_SCAN", "DB: Querying for latest unexited log for card: $cardId")
         val unexitedLog = accessLogDao.getLatestUnexitedLog(cardId)
 
         if (unexitedLog == null) {
+            Log.i("NFC_DEBUG_SCAN", "DB_QUERY_RESULT: No unexited log found for $cardId. ==> Processing as ENTRY.")
+            // --- 入场逻辑 ---
+            val entryTime = System.currentTimeMillis()
             val newLog = AccessLog(
                 cardIdFk = cardId,
-                entryTimeMillis = System.currentTimeMillis(),
-                isInside = true
+                entryTimeMillis = entryTime,
+                isInside = true // Mark as inside
             )
-            accessLogDao.insertLog(newLog)
+            val insertedLogId = accessLogDao.insertLog(newLog)
+            Log.i("NFC_DEBUG_SCAN", "DB_INSERT: New AccessLog inserted. ID: $insertedLogId, CardID: $cardId, EntryTime: $entryTime, IsInside: true")
+
             withContext(Dispatchers.Main) {
                 _isInsideArea.value = true
                 _entryCardId.value = cardId
-                updateOperationStatus("欢迎入场! 卡: $cardId. 余额: ${"%.2f".format(cardInfo.balanceInFen / 100.0)}元")
+                val balanceInYuan = "%.2f".format(cardInfo.balanceInFen / 100.0)
+                updateOperationStatus("欢迎入场! 卡号: $cardId. 余额: $balanceInYuan 元")
+                Log.d("NFC_DEBUG_SCAN", "UI_UPDATE: Entry successful. isInsideArea=true, entryCardId=$cardId")
             }
         } else {
-            if (unexitedLog.cardIdFk == cardId) {
-                val exitTime = System.currentTimeMillis()
-                // --- 修改点：使用可配置的自动扣款金额 ---
-                val amountToDeduct = _autoDeductAmountInFen.value // 使用状态中的值
+            Log.i("NFC_DEBUG_SCAN", "DB_QUERY_RESULT: Unexited log FOUND for $cardId. ID: ${unexitedLog.id}, CardID: ${unexitedLog.cardIdFk}, EntryTime: ${unexitedLog.entryTimeMillis}, IsInside: ${unexitedLog.isInside} ==> Processing as EXIT.")
+            // --- 出场逻辑 ---
+            // Sanity check, though query should ensure this
+            if (unexitedLog.cardIdFk != cardId) {
+                Log.e("NFC_DEBUG_SCAN", "CRITICAL_ERROR: Mismatched card ID in unexitedLog! Expected $cardId, got ${unexitedLog.cardIdFk}. Aborting exit.")
+                updateOperationStatus("系统错误: 卡ID不匹配", clearAfterDelay = true)
+                Log.i("NFC_DEBUG_SCAN", "---------- Scan Event End (Critical Error) ----------")
+                return
+            }
+            if (!unexitedLog.isInside) {
+                Log.e("NFC_DEBUG_SCAN", "LOGIC_ERROR: Found an 'unexited' log (ID: ${unexitedLog.id}) but its 'isInside' is already false. This indicates a previous error or an issue with getLatestUnexitedLog query. Treating as a new entry to be safe.")
+                // To be safe, maybe treat as a new entry or show an error
+                // For now, let's log and proceed to create a new entry log to avoid getting stuck.
+                // This part might need more sophisticated handling based on business rules.
+                updateOperationStatus("系统提示: 发现异常记录,已重置为入场.", clearAfterDelay = true)
+                // Effectively restart the process for this card as an entry
+                val entryTime = System.currentTimeMillis()
+                val newLogOnError = AccessLog(cardIdFk = cardId, entryTimeMillis = entryTime, isInside = true)
+                accessLogDao.insertLog(newLogOnError)
+                Log.i("NFC_DEBUG_SCAN", "DB_INSERT_RECOVERY: New AccessLog inserted due to prior inconsistent state. CardID: $cardId, IsInside: true")
+                withContext(Dispatchers.Main) {
+                    _isInsideArea.value = true
+                    _entryCardId.value = cardId
+                    updateOperationStatus("欢迎重新入场! 卡号: $cardId")
+                }
+                Log.i("NFC_DEBUG_SCAN", "---------- Scan Event End (Recovery as Entry) ----------")
+                return
+            }
 
 
-                if (cardInfo.balanceInFen >= amountToDeduct) {
-                    val newBalance = cardInfo.balanceInFen - amountToDeduct
-                    cardInfoDao.updateCard(cardInfo.copy(balanceInFen = newBalance))
-                    accessLogDao.updateLog(
-                        unexitedLog.copy(
-                            exitTimeMillis = exitTime,
-                            amountDeductedInFen = amountToDeduct,
-                            isInside = false
-                        )
-                    )
-                    withContext(Dispatchers.Main) {
-                        _currentBalance.value = newBalance
-                        _isInsideArea.value = false
-                        _entryCardId.value = null
-                        updateOperationStatus("再见! 扣款: ${"%.2f".format(amountToDeduct / 100.0)}元. 新余额: ${"%.2f".format(newBalance / 100.0)}元")
-                    }
+            val exitTime = System.currentTimeMillis()
+            val amountToDeduct = _autoDeductAmountInFen.value // Assuming this is defined elsewhere
+            Log.d("NFC_DEBUG_SCAN", "EXIT_CALC: Amount to deduct: $amountToDeduct fen")
+
+            if (cardInfo.balanceInFen >= amountToDeduct) {
+                val newBalance = cardInfo.balanceInFen - amountToDeduct
+                Log.d("NFC_DEBUG_SCAN", "EXIT_BALANCE: Sufficient balance. Current: ${cardInfo.balanceInFen}, New: $newBalance")
+
+                val updatedCardInfo = cardInfo.copy(balanceInFen = newBalance)
+                cardInfoDao.updateCard(updatedCardInfo)
+                Log.i("NFC_DEBUG_SCAN", "DB_UPDATE: CardInfo updated for $cardId. New balance: $newBalance fen")
+
+                val logToUpdate = unexitedLog.copy(
+                    exitTimeMillis = exitTime,
+                    amountDeductedInFen = amountToDeduct,
+                    isInside = false // CRUCIAL: Setting isInside to false
+                )
+                accessLogDao.updateLog(logToUpdate)
+                Log.i("NFC_DEBUG_SCAN", "DB_UPDATE: AccessLog updated. ID: ${logToUpdate.id}, CardID: ${logToUpdate.cardIdFk}, ExitTime: $exitTime, AmountDeducted: $amountToDeduct, IsInside: ${logToUpdate.isInside}")
+
+                // --- IMPORTANT VERIFICATION STEP ---
+                val verificationLog = accessLogDao.getLatestUnexitedLog(cardId)
+                if (verificationLog == null) {
+                    Log.i("NFC_DEBUG_SCAN", "DB_VERIFICATION_AFTER_EXIT: SUCCESS! getLatestUnexitedLog for $cardId now returns NULL (as expected).")
                 } else {
-                    withContext(Dispatchers.Main) {
-                        updateOperationStatus("错误: 余额不足 (${"%.2f".format(cardInfo.balanceInFen / 100.0)}元). 无法扣款 ${"%.2f".format(amountToDeduct / 100.0)}元")
-                    }
+                    Log.e("NFC_DEBUG_SCAN", "DB_VERIFICATION_AFTER_EXIT: FAILED! getLatestUnexitedLog for $cardId still returns a log. ID: ${verificationLog.id}, IsInside: ${verificationLog.isInside}. THIS IS THE PROBLEM!")
+                }
+                // --- END OF VERIFICATION STEP ---
+
+                withContext(Dispatchers.Main) {
+                    _currentBalance.value = newBalance
+                    _isInsideArea.value = false
+                    _entryCardId.value = null
+                    val newBalanceInYuan = "%.2f".format(newBalance / 100.0)
+                    val amountDeductedInYuan = "%.2f".format(amountToDeduct / 100.0)
+                    updateOperationStatus("再见! 扣款: $amountDeductedInYuan 元. 新余额: $newBalanceInYuan 元")
+                    Log.d("NFC_DEBUG_SCAN", "UI_UPDATE: Exit successful. isInsideArea=false, entryCardId=null")
                 }
             } else {
+                Log.w("NFC_DEBUG_SCAN", "EXIT_BALANCE: Insufficient balance. Current: ${cardInfo.balanceInFen}, Required: $amountToDeduct")
                 withContext(Dispatchers.Main) {
-                    updateOperationStatus("错误: 出场刷卡与入场卡 (${_entryCardId.value}) 不符.")
+                    val currentBalanceInYuan = "%.2f".format(cardInfo.balanceInFen / 100.0)
+                    val amountToDeductInYuan = "%.2f".format(amountToDeduct / 100.0)
+                    updateOperationStatus("错误: 余额不足 ($currentBalanceInYuan 元). 无法扣款 $amountToDeductInYuan 元")
                 }
             }
         }
+        Log.i("NFC_DEBUG_SCAN", "---------- Scan Event End ----------")
     }
 
     private fun adminReadBalance() {
